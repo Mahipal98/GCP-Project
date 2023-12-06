@@ -1,0 +1,6 @@
+CREATE TABLE `Teams` (
+  `TeamID` int NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) NOT NULL,
+  `Topic` varchar(200) DEFAULT NULL,
+  PRIMARY KEY (`TeamID`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
