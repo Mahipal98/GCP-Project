@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Datatables CSS -->
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.css" />
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+    integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+  <!-- Datatables JS -->
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.js"></script>
+  <title>Admin Portal</title>
+
+  <style>
+    body{
+      background-image: linear-gradient(to top, #e6e9f0 0%, #eef1f5 100%);
+    }
+    .flex-grid {
+      display: flex;
+    }
+    .flex-col {
+      flex: 1;
+      margin: 0.5em;
+      /* border: 0.1em solid black; */
+      border-radius: 1em;
+      padding: 0 1em 1em 1em;
+      background: linear-gradient(white, white) padding-box,
+                  linear-gradient(to right, darkblue, darkorchid) border-box;
+      border: 0.1em solid transparent;
+    }
+    h2{
+      border-bottom: 0.1em solid black;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="flex-grid">
+    <div class="flex-col">
+      <h2>List of User</h2>
+      <table id="tblUsers" class="row-border stripe order-column hover">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Team</th>
+            <th>Role</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="flex-col">
+      <h2>List of Teams</h2>
+      <table id="tblTeams" class="row-border stripe order-column hover">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Topic</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="flex-grid">
+    <div class="flex-col">
+      <h2>Create User</h2>
+      <form id="loginForm">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required><br>
+        <label for="fullname">Full Name:</label>
+        <input type="text" id="fullname" name="fullname" required><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br>
+        <label for="team">Choose a team:</label>
+        <select id="team" name="team">
+        </select>
+        <label for="role">Choose a role:</label>
+        <select id="role" name="role">
+          <option value="admin">Admin</option>
+          <option value="user">User</option>
+        </select>
+        <button type="button" onclick="createUser()">Create User</button>
+      </form>
+    </div>
+    <div class="flex-col">
+      <h2>Create Team</h2>
+      <form id="loginForm">
+        <label for="tname">Name:</label>
+        <input type="text" id="tname" name="tname" required><br>
+        <button type="button" onclick="createTeam()">Create Team</button>
+      </form>
+    </div>
+  </div>
+  <script>
+    const cloudFnURL = `https://northamerica-northeast2-elegant-cipher-399617.cloudfunctions.net/list-users`;
+    const Operations = {
+      AddUser: 1,
+      ViewUser: 2,
+      AddTeam: 3,
+      ViewTeam: 4
+    }
+    var users;
+    var teams;
+    $(document).ready(function () {
+      refresh();
+    });
+
+    async function createUser() {
+      const fullname = $('#fullname').val();
+      const email = $('#email').val();
+      const password = $('#password').val();
+      const role = $('#role').find(":selected").text();
+      const team = $('#team').find(':selected').val();
+      var operation = Operations.AddUser;
+      debugger;
+      try {
+        const response = await fetch(cloudFnURL, {
+          method: 'POST',
+          body: JSON.stringify({ "operation": operation, "email": email, "password": password, "name": fullname, "role": role, "team": team }),
+        });
+
+        if (response.ok) {
+          alert(' User added successful!');
+          refresh();
+        } else {
+          alert(' User adding failed!');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    async function createTeam() {
+      const tname = $('#tname').val();
+      var operation = Operations.AddTeam;
+      debugger;
+      try {
+        const response = await fetch(cloudFnURL, {
+          method: 'POST',
+          body: JSON.stringify({ "operation": operation, "name": tname }),
+        });
+
+        if (response.ok) {
+          alert('Team added successful!');
+          refresh();
+        } else {
+          alert('Error adding Teams');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    async function fetchData() {
+      try {
+        var operation = Operations.ViewTeam;
+        var response = await fetch(cloudFnURL, {
+          method: 'POST',
+          body: JSON.stringify({ "operation": operation }),
+        });
+        teams = await response.json();
+        if (response.ok) {
+          $.each(teams, function () {
+            $("#team").append($("<option     />").val(this.TeamID).text(this.Name));
+            var $tr = $('<tr>').append($('<td>').text(this.TeamID)).append($('<td>').text(this.Name)).append($('<td>').text(this.Topic));
+            $("#tblTeams").append($tr);
+          });
+          $('#tblTeams').DataTable({
+          paging: true,
+        });
+        } else {
+          console.error('Error:', data.error);
+        }
+        operation = Operations.ViewUser;
+        response = await fetch(cloudFnURL, {
+          method: 'POST',
+          body: JSON.stringify({ "operation": operation }),
+        });
+        users = await response.json();
+
+        if (response.ok) {
+          $.each(users, function () {
+            var $tr = $('<tr>').append($('<td>').text(this.UserID)).append($('<td>').text(this.Name)).append($('<td>').text(this.Email)).append($('<td>').text(this.TeamName)).append($('<td>').text(this.Role));
+            $("#tblUsers").append($tr);
+          });
+          $('#tblUsers').DataTable({
+          paging: true,
+          });
+        } else {
+          console.error('Error:', data.error);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+    async function emptyData() {
+      try {
+        users = null; teams = null;
+        $("#tblTeams").find("tr:gt(0)").remove();
+        $("#tblUsers").find("tr:gt(0)").remove();
+        $("#team").empty();
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    async function refresh() {
+      try {
+        emptyData();
+        fetchData();
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+
+  </script>
+</body>
+
+</html>
