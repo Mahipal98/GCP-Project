@@ -21,16 +21,26 @@
 
 const USERS_LIST_TOPIC_PREFIX = 'users';
 const USERS_LIST_TOPIC = USERS_LIST_TOPIC_PREFIX + '/#';
-const CHAT_ROOM_TOPIC = 'chat';
+var CHAT_ROOM_TOPIC = 'chat';
 
 // Target MQTT.Cool address. Change it with if required.
 const MQTT_COOL_URL = 'https://mqtt-server-eqvmlnifia-pd.a.run.app';
-const cloudFnURL = `https://northamerica-northeast2-elegant-cipher-399617.cloudfunctions.net/list-users`;
+const cloudFnURL = `https://northamerica-northeast2-elegant-cipher-399617.cloudfunctions.net/crud-function`;
 // Default MQTT broker to connect to.
 //const DEFAULT_BROKER_HOST = 'broker.mqtt.cool';
 const DEFAULT_BROKER_HOST = '34.122.152.155';
 
 const DEFAULT_BROKER_PORT = '1883';
+const Operations = {
+  AddUser: 1,
+  ViewUser: 2,
+  AddTeam: 3,
+  ViewTeam: 4,
+  Login: 5,
+  DeleteUser: 6,
+  DeleteTeam: 7,
+  RecordMessage: 8
+}
 
 const USER_STYLE = {
   MY_USER_COLOR: 'loggedUser',
@@ -61,10 +71,17 @@ $(function() {
   login(userId, userPass);  
 });
 
+async function RecordMessage(userId, teamId, userName, email, role, teamName, topic, message){
+  fetch(cloudFnURL, {
+    method: 'POST',
+    body: JSON.stringify({ "operation": Operations.RecordMessage, "userId": userId, "teamId": teamId, "userName": userName, "userEmail": email, "userRole": role, "teamName": teamName, "topic": topic , "message": message}),
+  });
+}
+
 async function login(email, password){
   const response = await fetch(cloudFnURL, {
       method: 'POST',
-      body: JSON.stringify({ "operation": 5, "email": email, "password": password}),
+      body: JSON.stringify({ "operation": Operations.Login, "email": email, "password": password}),
   });
   if (response.ok) {
       user = await response.json();
@@ -75,6 +92,7 @@ async function login(email, password){
             $('#replyBtn').click();
           }
         });
+        CHAT_ROOM_TOPIC = user[0].Topic;
         connectToMQTTCool(MQTT_COOL_URL);
       }
       else if(user[0].Role.toLowerCase() == "User".toLowerCase()){
@@ -323,12 +341,12 @@ function sendNewChatMessage(mqttClient, myClientId) {
     clientId: myClientId,
     textReply: $('#sendMessage').val()
   };
-
+  
   const plainPayload = JSON.stringify(structuredPayload);
   const message = new mqttcool.Message(plainPayload);
   message.destinationName = CHAT_ROOM_TOPIC;
   mqttClient.send(message);
-
+  RecordMessage(user[0].UserID, user[0].TeamID, user[0].Name, user[0].Email, user[0].Role, user[0].TeamName, user[0].Topic, $('#sendMessage').val());
   $('#sendMessage').val('');
   $('#sendMessage').focus();
 }

@@ -49,6 +49,7 @@
             <th>Email</th>
             <th>Team</th>
             <th>Role</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -62,6 +63,7 @@
             <th>ID</th>
             <th>Name</th>
             <th>Topic</th>
+            <th>Action</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -100,16 +102,28 @@
     </div>
   </div>
   <script>
-    const cloudFnURL = `https://northamerica-northeast2-elegant-cipher-399617.cloudfunctions.net/list-users`;
+    //const cloudFnURL = `https://northamerica-northeast2-elegant-cipher-399617.cloudfunctions.net/list-users`;
+    const cloudFnURL = `https://northamerica-northeast2-elegant-cipher-399617.cloudfunctions.net/crud-function`;
     const Operations = {
       AddUser: 1,
       ViewUser: 2,
       AddTeam: 3,
-      ViewTeam: 4
+      ViewTeam: 4,
+      Login: 5,
+      DeleteUser: 6,
+      DeleteTeam: 7
     }
     var users;
     var teams;
     $(document).ready(function () {
+      $('#tblUsers').DataTable({
+          paging: true,
+          sorting: false
+          });
+          $('#tblTeams').DataTable({
+          paging: true,
+          sorting: false
+        });
       refresh();
     });
 
@@ -170,12 +184,10 @@
         if (response.ok) {
           $.each(teams, function () {
             $("#team").append($("<option     />").val(this.TeamID).text(this.Name));
-            var $tr = $('<tr>').append($('<td>').text(this.TeamID)).append($('<td>').text(this.Name)).append($('<td>').text(this.Topic));
+            var $tr = $('<tr>').append($('<td>').text(this.TeamID)).append($('<td>').text(this.Name)).append($('<td>').text(this.Topic)).append($("<td>").html("<button onclick=deleteTeam("+ this.TeamID +")>Delete</button>"));
             $("#tblTeams").append($tr);
           });
-          $('#tblTeams').DataTable({
-          paging: true,
-        });
+          
         } else {
           console.error('Error:', data.error);
         }
@@ -188,12 +200,10 @@
 
         if (response.ok) {
           $.each(users, function () {
-            var $tr = $('<tr>').append($('<td>').text(this.UserID)).append($('<td>').text(this.Name)).append($('<td>').text(this.Email)).append($('<td>').text(this.TeamName)).append($('<td>').text(this.Role));
+            var $tr = $('<tr>').append($('<td>').text(this.UserID)).append($('<td>').text(this.Name)).append($('<td>').text(this.Email)).append($('<td>').text(this.TeamName)).append($('<td>').text(this.Role)).append($("<td>").html("<button onclick=deleteUser("+ this.UserID +")>Delete</button>"));
             $("#tblUsers").append($tr);
           });
-          $('#tblUsers').DataTable({
-          paging: true,
-          });
+          
         } else {
           console.error('Error:', data.error);
         }
@@ -204,6 +214,10 @@
     async function emptyData() {
       try {
         users = null; teams = null;
+        $('#fullname').val("");
+        $('#email').val("");
+        $('#password').val("");
+        $('#tname').val("");
         $("#tblTeams").find("tr:gt(0)").remove();
         $("#tblUsers").find("tr:gt(0)").remove();
         $("#team").empty();
@@ -221,7 +235,41 @@
       }
     }
 
+    async function deleteUser(id){
+      try {
+        const response = await fetch(cloudFnURL, {
+          method: 'POST',
+          body: JSON.stringify({ "operation": Operations.DeleteUser, "id": id }),
+        });
 
+        if (response.ok) {
+          alert('User deleted successful!');
+          refresh();
+        } else {
+          alert('Error deleting User');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+
+    async function deleteTeam(id){
+      try {
+        const response = await fetch(cloudFnURL, {
+          method: 'POST',
+          body: JSON.stringify({ "operation": Operations.DeleteTeam, "id": id }),
+        });
+
+        if (response.ok) {
+          alert('Team deleted successful!');
+          refresh();
+        } else {
+          alert('Error deleting Team');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
   </script>
 </body>
 
