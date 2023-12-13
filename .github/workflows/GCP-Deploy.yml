@@ -28,3 +28,6 @@ jobs:
     - name: Deploy via GCS
       run: |
         gsutil -m cp -r ./Admin/AdminPortal.html gs://group1adminportal/
+        gsutil -m cp -r ./Client/app.js gs://group1clouldchatapp/
+        gsutil -m cp -r ./Client/chat.css gs://group1clouldchatapp/
+        gsutil -m cp -r ./Client/index.html gs://group1clouldchatapp/
