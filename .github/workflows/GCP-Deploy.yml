@@ -27,7 +27,4 @@ jobs:
 
     - name: Deploy via GCS
       run: |
-        echo secrets.GCP_EMAIL
-        echo secrets.GCP_KEY
-        gsutil -m rm -rf gs://group1adminportal/* || echo "$?"
-        gsutil -m cp -r * gs://group1adminportal/
+        gsutil -m cp -r ./Admin/AdminPortal.html gs://group1adminportal/
