@@ -10,7 +10,10 @@ const Operations = {
       ViewUser: 2,
       AddTeam: 3,
       ViewTeam: 4,
-      Login: 5
+      Login: 5,
+      DeleteUser: 6,
+      DeleteTeam: 7,
+      RecordMessage: 8
     }
 
 const pool = mysql.createPool({
@@ -38,6 +41,12 @@ if (body.operation){
       break;
       case Operations.Login:
       Login(res, pool, body.email, body.password)
+      break;
+      case Operations.DeleteUser:
+      DeleteUser(res, pool, body.id)
+      break;
+      case Operations.DeleteTeam:
+      DeleteTeam(res, pool, body.id)
       break;
       default:
       DefaultResponse(res, "body")
@@ -75,11 +84,25 @@ function ViewTeam(res, pool){
 }
 
 function Login(res, pool, email, password){
-  var sql = "SELECT * FROM group1db.Users WHERE Email = '"+ email + "' AND Password = '" + password + "' LIMIT 1";
+  var sql = "SELECT u.UserID, u.Name, u.Role, u.Email, t.Topic as Topic FROM group1db.Users u INNER JOIN group1db.Teams t WHERE u.TeamID = t.TeamID WHERE Email = '"+ email + "' AND Password = '" + password + "' LIMIT 1";
   pool.query(sql, function (e, results) {
       res.status(200).send(results);
   });
 }
+
+function DeleteUser(res, pool, id){
+    var sql = "DELETE FROM group1db.Users WHERE ID = " + id +";";
+    pool.query(sql, function (e, results) {
+        res.status(200).send(results);
+    });
+}
+
+  function DeleteTeam(res, pool, id){
+    var sql = "DELETE FROM group1db.Teams WHERE ID = " + id +";";
+    pool.query(sql, function (e, results) {
+        res.status(200).send(results);
+    });
+  }
 
 function DefaultResponse(res, body){
     res.status(200).send(body);
